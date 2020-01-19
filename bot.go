@@ -29,7 +29,7 @@ func CreateBot() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	var gringotts = make(map[int]int64)
+	gringotts := InMemoryStorage{make(map[int]int64)}
 
 	updates, err := bot.GetUpdatesChan(u)
 
@@ -56,9 +56,9 @@ func CreateBot() {
 					break
 				}
 				user_id := update.Message.From.ID
-				gringotts[user_id] += data.val
+				gringotts.Add(user_id, data.val)
 				msg.Text = fmt.Sprintf(
-					"You added : %v, budget: %v", data.val, gringotts[user_id])
+					"You added : %v, budget: %v", data.val, gringotts.Get(user_id))
 			case SPENT:
 				data, err := ParseUpdateAmountMsg(update.Message.Text)
 				if err != nil {
@@ -66,12 +66,12 @@ func CreateBot() {
 					break
 				}
 				user_id := update.Message.From.ID
-				gringotts[user_id] -= data.val
+				gringotts.Spent(user_id, data.val)
 				msg.Text = fmt.Sprintf(
-					"You spent : %v, budget: %v", data.val, gringotts[user_id])
+					"You spent : %v, budget: %v", data.val, gringotts.Get(user_id))
 			case BUDGET:
 				user_id := update.Message.From.ID
-				msg.Text = fmt.Sprintf("Current budget : %v", gringotts[user_id])
+				msg.Text = fmt.Sprintf("Current budget : %v", gringotts.Get(user_id))
 			default:
 				msg.Text = "Wrooong! Use /help"
 			}
