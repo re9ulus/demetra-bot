@@ -14,7 +14,7 @@ const (
 	BUDGET = "budget"
 )
 
-func CreateBot() {
+func RunBot() {
 	token := os.Getenv("DEMETRA_TOKEN")
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
@@ -84,8 +84,4 @@ func CreateBot() {
 			log.Panic(err)
 		}
 	}
-}
-
-func main() {
-	CreateBot()
 }
