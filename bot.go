@@ -14,13 +14,12 @@ const (
 	BUDGET = "budget"
 )
 
-
-func create_bot() {
+func CreateBot() {
 	token := os.Getenv("DEMETRA_TOKEN")
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-        log.Printf("No token provided: ")
-        log.Panic(err)
+		log.Printf("No token provided: ")
+		log.Panic(err)
 	}
 
 	bot.Debug = true
@@ -30,7 +29,7 @@ func create_bot() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	var budget int64 = 0
+	var gringotts = make(map[int]int64)
 
 	updates, err := bot.GetUpdatesChan(u)
 
@@ -39,8 +38,9 @@ func create_bot() {
 			continue
 		}
 
+		fmt.Println(update.Message.From)
+
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-		// update.Message.Text
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case HELP:
@@ -50,25 +50,28 @@ func create_bot() {
                     /spent 13 - spent amount
                     /help - print this message`
 			case ADD:
-                data, err := ParseUpdateAmountMsg(update.Message.Text)
+				data, err := ParseUpdateAmountMsg(update.Message.Text)
 				if err != nil {
-                    msg.Text = "Usage: `/add 42` Use positive integer."
+					msg.Text = "Usage: `/add 42` Use positive integer."
 					break
 				}
-				budget += data.val
+				user_id := update.Message.From.ID
+				gringotts[user_id] += data.val
 				msg.Text = fmt.Sprintf(
-                    "You added : %v, budget: %v", data.val, budget)
+					"You added : %v, budget: %v", data.val, gringotts[user_id])
 			case SPENT:
-                data, err := ParseUpdateAmountMsg(update.Message.Text)
+				data, err := ParseUpdateAmountMsg(update.Message.Text)
 				if err != nil {
-                    msg.Text = "Usage: `/spent 42` Use positive interger."
+					msg.Text = "Usage: `/spent 42` Use positive interger."
 					break
 				}
-                budget -= data.val
+				user_id := update.Message.From.ID
+				gringotts[user_id] -= data.val
 				msg.Text = fmt.Sprintf(
-                    "You spent : %v, budget: %v", data.val, budget)
+					"You spent : %v, budget: %v", data.val, gringotts[user_id])
 			case BUDGET:
-				msg.Text = fmt.Sprintf("Current budget : %v", budget)
+				user_id := update.Message.From.ID
+				msg.Text = fmt.Sprintf("Current budget : %v", gringotts[user_id])
 			default:
 				msg.Text = "Wrooong! Use /help"
 			}
@@ -84,5 +87,5 @@ func create_bot() {
 }
 
 func main() {
-	create_bot()
+	CreateBot()
 }
