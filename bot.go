@@ -29,7 +29,7 @@ func RunBot() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	gringotts := InMemoryStorage{make(map[int]int64)}
+	gringotts := NewInMemoryStorage()
 
 	updates, err := bot.GetUpdatesChan(u)
 
