@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-redis/redis"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
@@ -15,21 +16,37 @@ const (
 )
 
 func RunBot() {
+	isDebug := true
 	token := os.Getenv("DEMETRA_TOKEN")
+	storageType, ok := os.LookupEnv("DEMETRA_STORAGE")
+	if !ok {
+		storageType = "memory"
+	}
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Printf("No token provided: ")
 		log.Panic(err)
 	}
-
-	bot.Debug = true
+	bot.Debug = isDebug
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	gringotts := NewInMemoryStorage()
+	var gringotts Storage
+	switch storageType {
+	case "memory":
+		gringotts = NewInMemoryStorage()
+	case "redis":
+		gringotts = NewRedisStorage(
+			redis.NewClient(
+				&redis.Options{Addr: "localhost:6379"},
+			),
+		)
+	default:
+		panic("wrong storage type")
+	}
 
 	updates, err := bot.GetUpdatesChan(u)
 
