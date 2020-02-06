@@ -6,6 +6,7 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
+	storage "re9ulus.com/demetra-bot/v2/storage"
 )
 
 const (
@@ -34,12 +35,12 @@ func RunBot() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	var gringotts Storage
+	var gringotts storage.Storage
 	switch storageType {
 	case "memory":
-		gringotts = NewInMemoryStorage()
+		gringotts = storage.NewInMemoryStorage()
 	case "redis":
-		gringotts = NewRedisStorage(
+		gringotts = storage.NewRedisStorage(
 			redis.NewClient(
 				&redis.Options{Addr: "localhost:6379"},
 			),
